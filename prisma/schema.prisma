@@ -1,0 +1,124 @@
+
+generator client {
+  provider = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id          Int       @id @default(autoincrement())
+  name        String
+  branch      String?
+  phone       String
+  email       String?
+
+  username    String    @unique
+  password    String
+
+  slotDuration Int?          // for reservation, in minutes
+
+  createdAt   DateTime  @default(now())
+
+  tables      Table[]
+  storeHours  StoreHour[]
+  exceptions  StoreException[]
+
+}
+
+model Table {
+  id           Int       @id @default(autoincrement())
+  restaurantId Int
+  name         String
+  capacity     Int
+  description  String?
+
+  createdAt    DateTime  @default(now())
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  availabilities TableAvailability[]
+  exceptions   TableException[]
+  reservations Reservation[]
+
+  @@unique([id,restaurantId])
+}
+
+model StoreHour {
+  id           Int          @id @default(autoincrement())
+  restaurantId Int
+  dayOfWeek    DayOfWeek    
+  openTime     DateTime?     @db.Time
+  closeTime    DateTime?     @db.Time
+  isClosed     Boolean      
+
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
+
+  @@unique([restaurantId, dayOfWeek])  // Ensure one record per day per restaurant
+}
+
+model StoreException{
+  id           Int        @id @default(autoincrement())
+  restaurantId Int
+  date         DateTime   @db.Date
+  openTime     DateTime?  @db.Time
+  closeTime    DateTime?  @db.Time
+  isClosed     Boolean
+  description  String?
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@unique([id,restaurantId])
+}
+
+model TableAvailability {
+  id          Int       @id @default(autoincrement())
+  tableId     Int
+  dayOfWeek   DayOfWeek
+  openTime    DateTime  @db.Time
+  closeTime   DateTime  @db.Time
+
+  table       Table     @relation(fields: [tableId], references: [id])
+  @@unique([tableId, dayOfWeek])  // Ensure one record per day per table
+}
+
+model TableException {
+  id              Int         @id @default(autoincrement())
+  tableId         Int
+  date            DateTime    @db.Date
+  exceptTimeFrom  DateTime?   @db.Time
+  exceptTimeTo    DateTime?   @db.Time
+  isClosed        Boolean
+  description     String?
+
+  table      Table    @relation(fields: [tableId], references: [id])
+  
+  @@unique([id,tableId])
+}
+
+model Reservation {
+  id            Int       @id @default(autoincrement())
+  bookingRef    String    @unique
+  tableId       Int
+  customerName  String
+  customerPhone String
+  bookingDate   DateTime
+  startTime     DateTime  @db.Time
+  endTime       DateTime  @db.Time
+  status        String    // e.g. "confirmed", "cancelled"
+  createdAt     DateTime  @default(now())
+
+  table         Table     @relation(fields: [tableId], references: [id])
+}
+
+enum DayOfWeek {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
