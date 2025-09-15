@@ -60,8 +60,8 @@ exports.updateRestaurant = async (req, res, next) => {
     }
 
     // Check if there's data to update
-    const { name, branch, phone, email, username, password } = req.body;
-    if (!name && !branch && !phone && !email && !username && !password) {
+    const { name, branch, phone, email, username, password, slotDuration } = req.body;
+    if (!name && !branch && !phone && !email && !username && !password && !slotDuration) {
       throw new AppError(400, "NO_DATA", "No data provided for update");
     }
 
@@ -74,6 +74,7 @@ exports.updateRestaurant = async (req, res, next) => {
         email,
         username,
         password,
+        slotDuration
       }
     );
 
