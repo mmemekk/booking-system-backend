@@ -48,6 +48,8 @@ exports.formatDateForDatabase = (date) => {
 
 //Format time for response (HH:mm)
 exports.formatTimeForResponse = (dateTime) => {
+  if (!dateTime) return null;
+
   return dateTime.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -133,3 +135,44 @@ exports.formatDateTimeForTableExceptionResponse = (tableException) => {
 exports.formatDateTimeForTableExceptionResponseArray = (tableException) => {
   return tableException.map(this.formatDateTimeForTableExceptionResponse);
 }
+
+exports.formatDateTimeForStoreHourWithOutTimeSlotResponse = (availability) => {
+  return {
+    ...availability,
+    date: this.formatDateForResponse(availability.date),
+    openCloseTimes: availability.openCloseTimes.map((slot) => ({
+      openTime: this.formatTimeForResponse(slot.openTime),
+      closeTime: this.formatTimeForResponse(slot.closeTime),
+    })),
+  };
+}
+
+exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse = (table) => {
+  return {
+    ...table,
+    availabilities: Array.isArray(table.availabilities)
+      ? table.availabilities.map((slot) => ({
+          ...slot,
+          openTime: this.formatTimeForResponse(slot.openTime),
+          closeTime: this.formatTimeForResponse(slot.closeTime),
+        }))
+      : [],
+    exceptions: Array.isArray(table.exceptions)
+      ? table.exceptions.map((slot) => ({
+          ...slot,
+          date: this.formatDateForResponse(slot.date),
+          exceptTimeFrom: this.formatTimeForResponse(slot.exceptTimeFrom),
+          exceptTimeTo: this.formatTimeForResponse(slot.exceptTimeTo),
+        }))
+      : [],
+  };
+};
+
+exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponseArray = (tables) => {
+  return Array.isArray(tables)
+    ? tables.map(this.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse)
+    : [];
+};
+
+
+

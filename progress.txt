@@ -27,3 +27,33 @@ createTableException function without service layer
     }
   ]
 }
+
+
+{
+  "restaurantId": 1,
+  "date": "2025-09-20",
+  "partySize": 4,
+  "availableSlots": [
+    {
+      "startTime": "18:00",
+      "endTime": "19:00",
+      "tables": [
+        { "tableId": 2, "name": "Window Seat", "capacity": 4 }
+      ]
+    },
+    {
+      "startTime": "18:30",
+      "endTime": "19:30",
+      "tables": [
+        { "tableId": 3, "name": "Family Table", "capacity": 6 }
+      ]
+    },
+    {
+      "startTime": "19:00",
+      "endTime": "20:00",
+      "tables": [
+        { "tableId": 2, "name": "Window Seat", "capacity": 4 }
+      ]
+    }
+  ]
+}
