@@ -38,7 +38,7 @@ model Table {
 
   createdAt    DateTime  @default(now())
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   availabilities TableAvailability[]
   exceptions   TableException[]
   reservations Reservation[]
@@ -54,7 +54,7 @@ model StoreHour {
   closeTime    DateTime?     @db.Time
   isClosed     Boolean      
 
-  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, dayOfWeek])  // Ensure one record per day per restaurant
 }
@@ -68,7 +68,7 @@ model StoreException{
   isClosed     Boolean
   description  String?
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([id,restaurantId])
 }
@@ -80,7 +80,7 @@ model TableAvailability {
   openTime    DateTime  @db.Time
   closeTime   DateTime  @db.Time
 
-  table       Table     @relation(fields: [tableId], references: [id])
+  table       Table     @relation(fields: [tableId], references: [id], onDelete: Cascade)
   @@unique([tableId, dayOfWeek])  // Ensure one record per day per table
 }
 
@@ -93,7 +93,7 @@ model TableException {
   isClosed        Boolean
   description     String?
 
-  table      Table    @relation(fields: [tableId], references: [id])
+  table      Table    @relation(fields: [tableId], references: [id], onDelete: Cascade)
   
   @@unique([id,tableId])
 }
