@@ -26,7 +26,7 @@ exports.getTable = async (restaurantId, filter) => {
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch store hours");
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch table");
     }
 };
 
@@ -55,7 +55,7 @@ exports.createTable = async (restaurantId, tableData) => {
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch store hours");
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch table");
     }
 };
 
@@ -80,7 +80,7 @@ exports.updateTable = async (restaurantId, tableId, tableData) => {
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch store hours");
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch table");
     }
 };
 
@@ -100,12 +100,12 @@ exports.deleteTable = async (restaurantId, tableId) => {
 
         if (error.code === "P2025") {
         // Prisma not found error
-        throw new AppError(404, "NOT_FOUND", "Store exception not found");
+        throw new AppError(404, "NOT_FOUND", "Table not found");
         }
         
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch store hours");
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch table");
     }
 };
