@@ -90,9 +90,79 @@ const getTableAvailabilityAndExceptionByDate = async(restaurantId, date) => {
     }
 }
 
+const subtractTableExceptionFromAvailabilities = (availabilities, exFrom, exTo) =>{
+    const result = [];
+
+    for (const { openTime, closeTime } of availabilities) {
+      const start = new Date(openTime).getTime();
+      const end = new Date(closeTime).getTime();
+      const exStart = new Date(exFrom).getTime();
+      const exEnd = new Date(exTo).getTime();
+
+      // No overlap
+      if (exEnd <= start || exStart >= end) {
+        result.push({ openTime, closeTime });
+      }
+      // Exception covers everything -> nothing left
+      else if (exStart <= start && exEnd >= end) {
+        continue;
+      }
+      // Exception overlaps left side
+      else if (exStart <= start && exEnd < end) {
+        result.push({ openTime: new Date(exEnd), closeTime: new Date(end) });
+      }
+      // Exception overlaps right side
+      else if (exStart > start && exEnd >= end) {
+        result.push({ openTime: new Date(start), closeTime: new Date(exStart) });
+      }
+      // Exception is in the middle, split interval
+      else if (exStart > start && exEnd < end) {
+        result.push({ openTime: new Date(start), closeTime: new Date(exStart) });
+        result.push({ openTime: new Date(exEnd), closeTime: new Date(end) });
+      }
+    }
+
+    // Merge contiguous intervals
+    if (result.length <= 1) return result;
+
+    result.sort((a, b) => new Date(a.openTime) - new Date(b.openTime));
+    const merged = [result[0]];
+
+    for (let i = 1; i < result.length; i++) {
+      const last = merged[merged.length - 1];
+      if (new Date(result[i].openTime) <= new Date(last.closeTime)) {
+        last.closeTime = new Date(Math.max(new Date(last.closeTime), new Date(result[i].closeTime)));
+      } else {
+        merged.push(result[i]);
+      }
+    }
+
+    return merged;
+}
+
+const formatTableAvailabilityAfterExceptionResponse = (tables) => {
+  return tables.map(table => {
+    return {
+      restaurantId: table.restaurantId,
+      id: table.id,
+      name: table.name,
+      capacity: table.capacity,
+      description: table.description,
+      availabilities: table.calculatedAvailabilities.map(a => ({
+        openTime: a.openTime,
+        closeTime: a.closeTime
+      }))
+    };
+  });
+}
+
+
 exports.getStoreHourAfterException = async (restaurantId, date) => {
     const storeHour = await getStoreHourByDate(restaurantId, date);
     const storeExceptions = await getStoreExceptionByDate(restaurantId, date);
+
+    console.log("Store Hour:", storeHour);
+    console.log("Store Exceptions:", storeExceptions);
 
     const baseResponse = {restaurantId, date};
     //check if storeException has isClosed true
@@ -146,84 +216,46 @@ exports.getStoreHourAfterException = async (restaurantId, date) => {
     };
 };
 
+
 exports.getTableAvailabilityAfterException = async (restaurantId, date) => {
-    return await getTableAvailabilityAndExceptionByDate(restaurantId, date);
+  const tableAvailabilityAndException = await getTableAvailabilityAndExceptionByDate(restaurantId, date);
+  console.log("Table Availability and Exceptions:", JSON.stringify(tableAvailabilityAndException, null, 2));
+
+  const result = [];
+
+  for (const table of tableAvailabilityAndException) {
+    // If any exception says isClosed => skip this table
+    if (table.exceptions.some((ex) => ex.isClosed)) continue;
+
+    let currentAvailabilities = table.availabilities.map((a) => ({
+      openTime: a.openTime,
+      closeTime: a.closeTime,
+    }));
+
+    for (const ex of table.exceptions) {
+      currentAvailabilities = subtractTableExceptionFromAvailabilities(currentAvailabilities, ex.exceptTimeFrom, ex.exceptTimeTo);
+    }
+
+    if (currentAvailabilities.length > 0) { //make sure that not push the empty availability
+      result.push({
+        ...table,
+        calculatedAvailabilities: currentAvailabilities,
+      });
+    }
+  }
+
+  const formattedTableAvailabilityAfterException = formatTableAvailabilityAfterExceptionResponse(result);
+  console.log("Formatted Table Availability After Exceptions:", JSON.stringify(formattedTableAvailabilityAfterException, null, 2));
+  return formattedTableAvailabilityAfterException;
 };
 
-// 2️⃣ Fetch tables with availability, exceptions, and reservations
-exports.getTablesWithDetails = async (restaurantId, dayOfWeek, date, partySize) => {
-  return await prisma.table.findMany({
-    where: {
-      restaurantId,
-      capacity: { gte: partySize }
-    },
-    include: {
-      availabilities: { where: { dayOfWeek } },
-      exceptions: { where: { date } },
-      reservations: { where: { bookingDate: date } }
-    }
-  });
-}
 
-// 3️⃣ Generate table slots excluding reservations
-exports.generateSlotsForTable = async (table, slotDuration, restaurantOpen, restaurantClose) => {
-  if (table.exceptions.some(e => e.isClosed)) return [];
 
-  let tableOpen = table.availabilities[0]?.openTime ?? restaurantOpen;
-  let tableClose = table.availabilities[0]?.closeTime ?? restaurantClose;
 
-  const exception = table.exceptions[0];
-  if (exception) {
-    if (exception.exceptTimeFrom) tableOpen = exception.exceptTimeFrom;
-    if (exception.exceptTimeTo) tableClose = exception.exceptTimeTo;
-  }
 
-  return generateSlots(tableOpen, tableClose, slotDuration, table.reservations);
-}
 
-// Helper: generate slots avoiding reservation conflicts
-exports.generateSlots = (openTime, closeTime, slotDuration, reservations) => {
-  const slots = [];
-  let current = new Date(openTime);
 
-  while (current < closeTime) {
-    const end = new Date(current.getTime() + slotDuration * 60000);
-    const conflict = reservations.some(r => !(end <= r.startTime || current >= r.endTime));
 
-    if (!conflict && end <= closeTime) {
-      slots.push({
-        startTime: current.toTimeString().slice(0, 5),
-        endTime: end.toTimeString().slice(0, 5)
-      });
-    }
-    current = end;
-  }
 
-  return slots;
-}
 
-// 4️⃣ Map all table slots to time-first structure
-exports.mapSlotsByTime = (tables, slotDuration, restaurantOpen, restaurantClose) =>{
-  const allSlots = {};
-
-  for (const table of tables) {
-    const tableSlots = generateSlotsForTable(table, slotDuration, restaurantOpen, restaurantClose);
-
-    tableSlots.forEach(slot => {
-      const key = `${slot.startTime}-${slot.endTime}`;
-      if (!allSlots[key]) allSlots[key] = [];
-      allSlots[key].push({
-        tableId: table.id,
-        name: table.name,
-        capacity: table.capacity,
-        description: table.description
-      });
-    });
-  }
-
-  return Object.entries(allSlots).map(([key, tables]) => {
-    const [startTime, endTime] = key.split("-");
-    return { startTime, endTime, tables };
-  });
-}
 

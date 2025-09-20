@@ -150,21 +150,27 @@ exports.formatDateTimeForStoreHourWithOutTimeSlotResponse = (availability) => {
 exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse = (table) => {
   return {
     ...table,
-    availabilities: Array.isArray(table.availabilities)
+    availabilities: table.availabilities
       ? table.availabilities.map((slot) => ({
           ...slot,
           openTime: this.formatTimeForResponse(slot.openTime),
           closeTime: this.formatTimeForResponse(slot.closeTime),
         }))
-      : [],
-    exceptions: Array.isArray(table.exceptions)
+      : undefined,
+    exceptions: table.exceptions
       ? table.exceptions.map((slot) => ({
           ...slot,
           date: this.formatDateForResponse(slot.date),
           exceptTimeFrom: this.formatTimeForResponse(slot.exceptTimeFrom),
           exceptTimeTo: this.formatTimeForResponse(slot.exceptTimeTo),
         }))
-      : [],
+      : undefined,
+    calculatedAvailabilities: table.calculatedAvailabilities
+      ? table.calculatedAvailabilities.map((slot) => ({
+          openTime: this.formatTimeForResponse(slot.openTime),
+          closeTime: this.formatTimeForResponse(slot.closeTime),
+        }))
+      : undefined,
   };
 };
 
