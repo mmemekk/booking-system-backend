@@ -249,7 +249,10 @@ exports.getTableAvailabilityAfterException = async (restaurantId, date) => {
   return formattedTableAvailabilityAfterException;
 };
 
+exports.getTableAvailabilityAfterStoreException = async (storeHourAfterException, tableAvailabilityAndException) => {
 
+    return null
+}
 
 
 

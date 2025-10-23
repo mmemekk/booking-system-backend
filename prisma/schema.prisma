@@ -26,6 +26,7 @@ model Restaurant {
   tables      Table[]
   storeHours  StoreHour[]
   exceptions  StoreException[]
+  bookings Booking[]
 
 }
 
@@ -41,7 +42,7 @@ model Table {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   availabilities TableAvailability[]
   exceptions   TableException[]
-  reservations Reservation[]
+  bookings Booking[]
 
   @@unique([id,restaurantId])
 }
@@ -98,19 +99,22 @@ model TableException {
   @@unique([id,tableId])
 }
 
-model Reservation {
+model Booking {
   id            Int       @id @default(autoincrement())
   bookingRef    String    @unique
+  restaurantId  Int
   tableId       Int
   customerName  String
   customerPhone String
   bookingDate   DateTime
   startTime     DateTime  @db.Time
   endTime       DateTime  @db.Time
+  capacity      Int
   status        String    // e.g. "confirmed", "cancelled"
   createdAt     DateTime  @default(now())
 
   table         Table     @relation(fields: [tableId], references: [id])
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
 }
 
 enum DayOfWeek {

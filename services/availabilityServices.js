@@ -5,27 +5,16 @@ const prisma = new PrismaClient();
 const {
     getStoreHourAfterException,
     getTableAvailabilityAfterException,
-    getTablesWithDetails,
-    generateSlotsForTable,
-    mapSlotsByTime,
-    get
+    getTableAvailabilityAfterStoreHour,
 } = require("./availabilityHelpers");
 
 exports.getAvailability = async (restaurantId, date, time, capacity) => {
     try{
         
-        // 1️⃣ Get store hours after exceptios
-        const { isClosed, openTime, closeTime, slotDuration } = await getStoreHourAfterException(restaurantId, date);
+        const storeHourAfterException = await getStoreHourAfterException(restaurantId, date);
+        const tableAvailabilityAfterException = await getTableAvailabilityAfterException(restaurantId, date);
 
-  if (isClosed) return { restaurantId, date, partySize, availableSlots: [] };
-
-//   // 2️⃣ Fetch tables with availability, exceptions, reservations
-//   const tables = await getTablesWithDetails(restaurantId, dayOfWeek, date, partySize);
-
-//   // 3️⃣ Generate all slots and map to time-first structure
-//   const allSlots = mapSlotsByTime(tables, slotDuration, openTime, closeTime);
-
-//   return { restaurantId, date, partySize, availableSlots: allSlots };
+        const availableTables = getTableAvailabilityAfterStoreHour(storeHourAfterException, tableAvailabilityAfterException);
 
     } catch (error) {
         console.error(error);
