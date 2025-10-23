@@ -1,14 +1,31 @@
 const bookingServices = require('../services/bookingServices');
 const { AppError } = require("../middleware/errorHandler");
 const dateTimeFormat = require("../utils/dateTimeFormat");
-const { format } = require('morgan');
-
 
 exports.getBooking = async (req, res, next) => {
   try {
-    const getBooking = await bookingServices.getBooking();
+    const restaurantId = parseInt(req.params.restaurantId);
+    if (!restaurantId || isNaN(restaurantId)) {
+      throw new AppError(400, "MISSING_ID", "Restaurant ID is required");
+    }
 
-    return res.json({ getBooking });
+    const { bookingId, bookingRef, bookingDate, tableId } = req.query;
+
+    const booking = await bookingServices.getBooking(
+      restaurantId,
+      {
+        bookingId,
+        bookingRef,
+        bookingDate,
+        tableId
+      }
+    );
+
+    const formattedBooking = dateTimeFormat.formatDateTimeForBookingResponseArray(
+      booking
+    );
+
+    return res.json({ formattedBooking });
 
   } catch (error) {
     next(error);
@@ -46,7 +63,11 @@ exports.createBooking = async (req, res, next) => {
       capacity
     });
 
-    return res.status(201).json({ createdBooking });
+    const formattedCreateBooking =  dateTimeFormat.formatDateTimeForBookingResponse(
+      createdBooking
+    );
+
+    return res.status(201).json({ formattedCreateBooking });
 
   } catch (error) {
     next(error);

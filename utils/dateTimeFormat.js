@@ -180,5 +180,22 @@ exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponseArray = (tables
     : [];
 };
 
+exports.formatDateTimeForBookingResponse = (booking) => {
+  return {
+    ...booking,
+    bookingDate: booking.bookingDate
+      ? this.formatDateForResponse(booking.bookingDate)
+      : null,
+    startTime: booking.startTime
+      ? this.formatTimeForResponse(booking.startTime)
+      : null,
+    endTime: booking.endTime
+      ? this.formatTimeForResponse(booking.endTime)
+      : null,
+  };
+};
 
+exports.formatDateTimeForBookingResponseArray = (booking) => {
+  return booking.map(this.formatDateTimeForBookingResponse);
+}
 

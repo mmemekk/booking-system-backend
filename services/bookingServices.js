@@ -6,21 +6,35 @@ const bookingReferenceUtil = require("../utils/bookingReference");
 
 exports.getBooking = async (restaurantId, filter) => {
     try{
-        const { minCapacity } = filter;
-        let where = { restaurantId };
+        const { bookingId, bookingRef, bookingDate, tableId } = filter;
 
-        if (minCapacity) {
-            where.capacity = { gte: parseInt(minCapacity) };
+        let where = { restaurantId: parseInt(restaurantId) };
+
+        if (bookingId) {
+            where.id = parseInt(bookingId); 
         }
 
-        const orderBy = minCapacity ? { capacity: 'asc' } : { id: 'asc' };
-        
-        const tables = await prisma.table.findMany({
-            where,
-            orderBy
+        if (bookingRef) {
+            where.bookingRef = bookingRef; 
+        }
+
+        if (bookingDate) {
+            where.bookingDate = new Date(bookingDate); 
+        }
+
+        if (tableId) {
+            where.tableId = parseInt(tableId);
+        }
+
+        const booking = await prisma.booking.findMany({
+            where
         });
 
-        return tables;
+        if (!booking || booking.length === 0) {
+            throw new AppError(404, "BOOKINGS_NOT_FOUND", "No bookings found for the given filters");
+        }
+
+        return booking;
 
     } catch (error) {
         console.error(error);
