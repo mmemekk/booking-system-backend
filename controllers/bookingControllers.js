@@ -76,9 +76,34 @@ exports.createBooking = async (req, res, next) => {
 
 exports.updateBooking = async (req, res, next) => {
   try {
-    const updatedBooking = await bookingServices.updateBooking();
+    const bookingRef = req.params.bookingRef;
+    if (!bookingRef) {
+      throw new AppError(400, "MISSING_ID", "Booking Ref is required");
+    }
+
+    const { tableId, customerName, customerPhone, bookingDate, startTime, endTime, capacity } = req.body;
+    const formattedBookingDate = bookingDate
+      ? dateTimeFormat.formatDateForDatabase(bookingDate)
+      : undefined;
+    const formattedStartTime = startTime
+      ? dateTimeFormat.formatTimeForDatabase(startTime)
+      : undefined;
+    const formattedEndTime = endTime
+      ? dateTimeFormat.formatTimeForDatabase(endTime)
+      : undefined;
+
+    const updatedBooking = await bookingServices.updateBooking(bookingRef,{
+      tableId,
+      customerName,
+      customerPhone,
+      formattedBookingDate,
+      formattedStartTime,
+      formattedEndTime,
+      capacity
+    });
+    const formattedUpdateBooking =  dateTimeFormat.formatDateTimeForBookingResponse( updatedBooking );
     
-    return res.json({ restaurant });
+    return res.json({ formattedUpdateBooking });
 
   } catch (error) {
     next(error);
@@ -87,9 +112,16 @@ exports.updateBooking = async (req, res, next) => {
 
 exports.deleteBooking = async (req, res, next) => {
   try {
-    const deletedBooking = await bookingServices.deleteBooking();
     
-    return res.json({ restaurant });
+    const bookingRef = req.params.bookingRef;
+    if (!bookingRef) {
+      throw new AppError(400, "MISSING_ID", "Booking Ref is required");
+    }
+
+    const deletedBooking = await bookingServices.deleteBooking(bookingRef);
+    const formattedDeletedBooking =  dateTimeFormat.formatDateTimeForBookingResponse( deletedBooking );
+
+    return res.json({ formattedDeletedBooking });
 
   } catch (error) {
     next(error);

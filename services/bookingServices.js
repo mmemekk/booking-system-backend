@@ -79,17 +79,20 @@ exports.createBooking = async (restaurantId, bookingData) => {
     }
 };
 
-exports.updateBooking = async (restaurantId, tableId, tableData) => {
+exports.updateBooking = async (bookingRef, bookingData) => {
     try{
-        const updateTable = await prisma.table.update({
+        const updateTable = await prisma.booking.update({
             where: {
-                id: tableId,
-                restaurantId: restaurantId
+                bookingRef
             },
             data: {
-                name: tableData.name,
-                capacity: tableData.capacity,
-                description: tableData.description
+                tableId: bookingData.tableId,
+                customerName: bookingData.customerName,
+                customerPhone: bookingData.customerPhone,
+                bookingDate: bookingData.formattedBookingDate,
+                startTime: bookingData.formattedStartTime,
+                endTime: bookingData.formattedEndTime,
+                capacity: bookingData.capacity,
             }
         });
 
@@ -100,16 +103,15 @@ exports.updateBooking = async (restaurantId, tableId, tableData) => {
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch table");
+        throw new AppError(500, "DATABASE_ERROR", "Failed to update table");
     }
 };
 
-exports.deleteBooking = async (restaurantId, tableId) => {
+exports.deleteBooking = async (bookingRef) => {
     try{
-        const deleteTable = await prisma.table.delete({
+        const deleteTable = await prisma.booking.delete({
             where: {
-                id: tableId,
-                restaurantId: restaurantId
+                bookingRef
             }
         });
 
