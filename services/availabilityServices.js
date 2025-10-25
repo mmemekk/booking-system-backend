@@ -42,7 +42,7 @@ exports.getStoreHourWithOutTimeSlot = async (restaurantId, date) => {
 exports.getTableAvailabilityWithOutTimeSlot = async (restaurantId, date) => {
     try{
         
-        return await getTableAvailabilityAfterException(restaurantId, date);
+        return await getTableAvailabilityAfterExceptionAndBooking(restaurantId, date);
 
     } catch (error) {
         console.error(error);

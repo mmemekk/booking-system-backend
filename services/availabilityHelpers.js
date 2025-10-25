@@ -237,7 +237,7 @@ exports.getStoreHourAfterException = async (restaurantId, date) => {
 };
 
 
-exports.getTableAvailabilityAfterException = async (restaurantId, date) => {
+exports.getTableAvailabilityAfterExceptionAndBooking = async (restaurantId, date) => {
     const tableAvailabilityAndException = await getTableAvailabilityAndExceptionByDate(restaurantId, date);
     console.log("Table Availability and Exceptions:", JSON.stringify(tableAvailabilityAndException, null, 2));
     const booking = await getBookingByDate(restaurantId, date);
