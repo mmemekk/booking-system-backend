@@ -180,6 +180,12 @@ exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponseArray = (tables
     : [];
 };
 
+exports.formatDateTimeForAvailabilityWithOutTimeSlotResponseArray = (tables) => {
+  return Array.isArray(tables)
+    ? tables.map(this.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse)
+    : [];
+};
+
 exports.formatDateTimeForBookingResponse = (booking) => {
   return {
     ...booking,

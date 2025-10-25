@@ -1,21 +1,17 @@
 const { PrismaClient } = require("@prisma/client");
 const { AppError } = require("../middleware/errorHandler");
 const prisma = new PrismaClient();
+const availabilityHelpers = require("./availabilityHelpers");
 
-const {
-    getStoreHourAfterException,
-    getTableAvailabilityAfterException,
-    getTableAvailabilityAfterStoreHour,
-} = require("./availabilityHelpers");
 
-exports.getAvailability = async (restaurantId, date, time, capacity) => {
+exports.getAvailabilityWithOutTimeSlot = async (restaurantId, date, time, capacity) => {
     try{
         
-        const storeHourAfterException = await getStoreHourAfterException(restaurantId, date);
-        const tableAvailabilityAfterException = await getTableAvailabilityAfterException(restaurantId, date);
-
-        const availableTables = getTableAvailabilityAfterStoreHour(storeHourAfterException, tableAvailabilityAfterException);
-
+        const storeHourAfterException = await availabilityHelpers.getStoreHourAfterException(restaurantId, date);
+        const tableAvailabilityAfterExceptionAndBooking = await availabilityHelpers.getTableAvailabilityAfterExceptionAndBooking(restaurantId, date);
+        const availableTables = availabilityHelpers.getTableAvailabilityAfterStoreHour(storeHourAfterException, tableAvailabilityAfterExceptionAndBooking);
+        
+        return availableTables;
     } catch (error) {
         console.error(error);
         if (error instanceof AppError) {
@@ -28,7 +24,7 @@ exports.getAvailability = async (restaurantId, date, time, capacity) => {
 exports.getStoreHourWithOutTimeSlot = async (restaurantId, date) => {
     try{
 
-        return await getStoreHourAfterException(restaurantId, date);
+        return await availabilityHelpers.getStoreHourAfterException(restaurantId, date);
 
     } catch (error) {
         console.error(error);
@@ -42,8 +38,8 @@ exports.getStoreHourWithOutTimeSlot = async (restaurantId, date) => {
 exports.getTableAvailabilityWithOutTimeSlot = async (restaurantId, date) => {
     try{
         
-        return await getTableAvailabilityAfterExceptionAndBooking(restaurantId, date);
-
+        return await availabilityHelpers.getTableAvailabilityAfterExceptionAndBooking(restaurantId, date);
+        
     } catch (error) {
         console.error(error);
         if (error instanceof AppError) {

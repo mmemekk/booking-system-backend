@@ -160,6 +160,47 @@ const subtractInterval = (availabilities, exFrom, exTo) =>{
     return merged;
 }
 
+const intersectIntervals = (availabilities, allowedIntervals) => {
+  const result = [];
+
+  for (const a of availabilities) {
+    const aStart = new Date(a.openTime).getTime();
+    const aEnd = new Date(a.closeTime).getTime();
+
+    for (const allowed of allowedIntervals) {
+      const sStart = new Date(allowed.openTime).getTime();
+      const sEnd = new Date(allowed.closeTime).getTime();
+
+      const overlapStart = Math.max(aStart, sStart);
+      const overlapEnd = Math.min(aEnd, sEnd);
+
+      if (overlapStart < overlapEnd) {
+        result.push({
+          openTime: new Date(overlapStart),
+          closeTime: new Date(overlapEnd),
+        });
+      }
+    }
+  }
+
+  // Merge contiguous overlaps (optional, for clean results)
+  if (result.length <= 1) return result;
+  result.sort((a, b) => new Date(a.openTime) - new Date(b.openTime));
+
+  const merged = [result[0]];
+  for (let i = 1; i < result.length; i++) {
+    const last = merged[merged.length - 1];
+    if (new Date(result[i].openTime) <= new Date(last.closeTime)) {
+      last.closeTime = new Date(Math.max(new Date(last.closeTime), new Date(result[i].closeTime)));
+    } else {
+      merged.push(result[i]);
+    }
+  }
+
+  return merged;
+};
+
+
 const formatTableAvailabilityAfterExceptionResponse = (tables) => {
   return tables.map(table => {
     return {
@@ -279,9 +320,31 @@ exports.getTableAvailabilityAfterExceptionAndBooking = async (restaurantId, date
     return formattedTableAvailabilityAfterException;
 };
 
-exports.getTableAvailabilityAfterStoreException = async (storeHourAfterException, tableAvailabilityAndException) => {
+exports.getTableAvailabilityAfterStoreHour = async (storeHourAfterException, tableAvailabilityAfterExceptionAndBooking) => {
+    // If store closed -> return empty
+    if (!storeHourAfterException || storeHourAfterException.isClosed) {
+        return [];
+    }
 
-    return null
+    const storeIntervals = storeHourAfterException.openCloseTimes.map((s) => ({
+        openTime: s.openTime,
+        closeTime: s.closeTime,
+    }));
+
+    const finalResult = [];
+
+    for (const table of tableAvailabilityAfterExceptionAndBooking) {
+        const availabilitiesAfterStoreHour = intersectIntervals(table.availabilities, storeIntervals);
+
+        if (availabilitiesAfterStoreHour.length > 0) {
+            finalResult.push({
+            ...table,
+            availabilities: availabilitiesAfterStoreHour,
+        });
+    }
+  }
+
+    return finalResult;
 }
 
 
