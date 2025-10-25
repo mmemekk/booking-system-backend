@@ -3,3 +3,8 @@ Fix getRestaurant query
 In availability service, consider the booked timeslot, discount from availability
 
 should fix booking reference, thus it's easier to manage with customer
+
+time is not be used when retrieving avilability, it returns the availabilities of the whole day
+
+//in case if want to dvelop to the stage where allow one booking perday, just enter the endTime
+when create booking as 23:59

@@ -47,7 +47,7 @@ const getStoreExceptionByDate = async(restaurantId, date) => {
 
 const getTableAvailabilityAndExceptionByDate = async(restaurantId, date) => {
     try {
-        const dayOfWeek = date.toLocaleString("en-US", { weekday: "long" }).toLowerCase();
+    const dayOfWeek = date.toLocaleString("en-US", { weekday: "long" }).toLowerCase();
     const tableAvailabilityAndException = await prisma.table.findMany({
       where: { restaurantId },
       select: {
@@ -90,7 +90,27 @@ const getTableAvailabilityAndExceptionByDate = async(restaurantId, date) => {
     }
 }
 
-const subtractTableExceptionFromAvailabilities = (availabilities, exFrom, exTo) =>{
+const getBookingByDate = async(restaurantId, date) => {
+    try {
+        const booking = await prisma.booking.findMany({
+            where: { 
+                restaurantId, 
+                bookingDate: date 
+            } 
+        });
+
+        return booking;
+
+    } catch (error) {
+        console.error(error);
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch bookings");
+    }
+}
+
+const subtractInterval = (availabilities, exFrom, exTo) =>{
     const result = [];
 
     for (const { openTime, closeTime } of availabilities) {
@@ -218,35 +238,45 @@ exports.getStoreHourAfterException = async (restaurantId, date) => {
 
 
 exports.getTableAvailabilityAfterException = async (restaurantId, date) => {
-  const tableAvailabilityAndException = await getTableAvailabilityAndExceptionByDate(restaurantId, date);
-  console.log("Table Availability and Exceptions:", JSON.stringify(tableAvailabilityAndException, null, 2));
+    const tableAvailabilityAndException = await getTableAvailabilityAndExceptionByDate(restaurantId, date);
+    console.log("Table Availability and Exceptions:", JSON.stringify(tableAvailabilityAndException, null, 2));
+    const booking = await getBookingByDate(restaurantId, date);
+    console.log("Bookings", booking);
 
-  const result = [];
+    const result = [];
 
-  for (const table of tableAvailabilityAndException) {
-    // If any exception says isClosed => skip this table
-    if (table.exceptions.some((ex) => ex.isClosed)) continue;
+    for (const table of tableAvailabilityAndException) {
+        // skip closed table
+        if (table.exceptions.some((ex) => ex.isClosed)) continue;
 
-    let currentAvailabilities = table.availabilities.map((a) => ({
-      openTime: a.openTime,
-      closeTime: a.closeTime,
-    }));
+        let currentAvailabilities = table.availabilities.map((a) => ({
+            openTime: a.openTime,
+            closeTime: a.closeTime,
+        }));
+        
+        //subtract exceptions
+        for (const ex of table.exceptions) {
+            currentAvailabilities = subtractInterval(currentAvailabilities, ex.exceptTimeFrom, ex.exceptTimeTo);
+        }
 
-    for (const ex of table.exceptions) {
-      currentAvailabilities = subtractTableExceptionFromAvailabilities(currentAvailabilities, ex.exceptTimeFrom, ex.exceptTimeTo);
-    }
+        //subtract bookings
+        const bookedTable = booking.filter((b) => b.tableId === table.id);
+        for (const res of bookedTable) {
+            currentAvailabilities = subtractInterval(currentAvailabilities, res.startTime, res.endTime);
+        }
 
-    if (currentAvailabilities.length > 0) { //make sure that not push the empty availability
-      result.push({
-        ...table,
-        calculatedAvailabilities: currentAvailabilities,
-      });
+        //make sure that not push the empty availability
+        if (currentAvailabilities.length > 0) { 
+            result.push({
+            ...table,
+            calculatedAvailabilities: currentAvailabilities,
+        });
     }
   }
 
-  const formattedTableAvailabilityAfterException = formatTableAvailabilityAfterExceptionResponse(result);
-  console.log("Formatted Table Availability After Exceptions:", JSON.stringify(formattedTableAvailabilityAfterException, null, 2));
-  return formattedTableAvailabilityAfterException;
+    const formattedTableAvailabilityAfterException = formatTableAvailabilityAfterExceptionResponse(result);
+    console.log("Formatted Table Availability After Exceptions:", JSON.stringify(formattedTableAvailabilityAfterException, null, 2));
+    return formattedTableAvailabilityAfterException;
 };
 
 exports.getTableAvailabilityAfterStoreException = async (storeHourAfterException, tableAvailabilityAndException) => {
