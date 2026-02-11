@@ -136,7 +136,7 @@ exports.formatDateTimeForTableExceptionResponseArray = (tableException) => {
   return tableException.map(this.formatDateTimeForTableExceptionResponse);
 }
 
-exports.formatDateTimeForStoreHourWithOutTimeSlotResponse = (availability) => {
+exports.formatDateTimeForEffectiveStoreHourResponse= (availability) => {
   return {
     ...availability,
     date: this.formatDateForResponse(availability.date),
@@ -147,7 +147,7 @@ exports.formatDateTimeForStoreHourWithOutTimeSlotResponse = (availability) => {
   };
 }
 
-exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse = (table) => {
+exports.formatDateTimeForEffectiveTableAvailabilityResponse = (table) => {
   return {
     ...table,
     availabilities: table.availabilities
@@ -174,9 +174,9 @@ exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse = (table) => {
   };
 };
 
-exports.formatDateTimeForTableAvailabilityWithOutTimeSlotResponseArray = (tables) => {
+exports.formatDateTimeForEffectiveTableAvailabilityResponseArray = (tables) => {
   return Array.isArray(tables)
-    ? tables.map(this.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse)
+    ? tables.map(this.formatDateTimeForEffectiveTableAvailabilityResponse)
     : [];
 };
 

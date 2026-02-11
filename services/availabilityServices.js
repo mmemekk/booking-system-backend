@@ -37,7 +37,7 @@ exports.getAvailability= async (restaurantId, date, time, capacity) => {
     }
 };
 
-exports.getStoreHourWithOutTimeSlot = async (restaurantId, date) => {
+exports.getEffectiveStoreHour = async (restaurantId, date) => {
     try{
 
         return await availabilityHelpers.getStoreHourAfterException(restaurantId, date);
@@ -51,7 +51,7 @@ exports.getStoreHourWithOutTimeSlot = async (restaurantId, date) => {
     }
 };
 
-exports.getTableAvailabilityWithOutTimeSlot = async (restaurantId, date) => {
+exports.getEffectiveTableAvailability = async (restaurantId, date) => {
     try{
         
         return await availabilityHelpers.getTableAvailabilityAfterExceptionAndBooking(restaurantId, date);

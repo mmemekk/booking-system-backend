@@ -68,7 +68,7 @@ exports.getAvailabilityWithOutTimeSlot = async (req, res, next) => {
   }
 };
 
-exports.getStoreHourWithOutTimeSlot = async (req, res, next) => {
+exports.getEffectiveStoreHour = async (req, res, next) => {
   try {
     const restaurantId = parseInt(req.params.restaurantId);
     const { date } = req.query;
@@ -83,21 +83,21 @@ exports.getStoreHourWithOutTimeSlot = async (req, res, next) => {
 
     const formattedDate = dateTimeFormat.formatDateForDatabase(date);
 
-    const getStoreHourWithOutTimeSlot = await availabilityServices.getStoreHourWithOutTimeSlot(
+    const getEffectiveStoreHour = await availabilityServices.getEffectiveStoreHour(
       restaurantId,
       formattedDate
     );
 
-    const formattedGetStoreHourWithOutTimeSlot = dateTimeFormat.formatDateTimeForStoreHourWithOutTimeSlotResponse(getStoreHourWithOutTimeSlot);
+    const formattedGetEffectiveStoreHour = dateTimeFormat.formatDateTimeForEffectiveStoreHourResponse(getEffectiveStoreHour);
 
-    return res.json({ formattedGetStoreHourWithOutTimeSlot });
+    return res.json({ formattedGetEffectiveStoreHour });
 
   } catch (error) {
     next(error);
   }
 };
 
-exports.getTableAvailabilityWithOutTimeSlot = async (req, res, next) => {
+exports.getEffectiveTableAvailability = async (req, res, next) => {
   try {
     const restaurantId = parseInt(req.params.restaurantId);
     const { date } = req.query;
@@ -112,14 +112,14 @@ exports.getTableAvailabilityWithOutTimeSlot = async (req, res, next) => {
 
     const formattedDate = dateTimeFormat.formatDateForDatabase(date);
 
-    const getTableAvailabilityWithOutTimeSlot = await availabilityServices.getTableAvailabilityWithOutTimeSlot(
+    const getEffectiveTableAvailability = await availabilityServices.getEffectiveTableAvailability(
       restaurantId,
       formattedDate
     );
 
-    const formattedGetTableAvailabilityWithOutTimeSlot = dateTimeFormat.formatDateTimeForTableAvailabilityWithOutTimeSlotResponseArray(getTableAvailabilityWithOutTimeSlot);
+    const formattedGetEffectiveTableAvailability= dateTimeFormat.formatDateTimeForEffectiveTableAvailabilityResponseArray(getEffectiveTableAvailability);
 
-    return res.json({ formattedGetTableAvailabilityWithOutTimeSlot });
+    return res.json({ formattedGetEffectiveTableAvailability });
 
   } catch (error) {
     next(error);
