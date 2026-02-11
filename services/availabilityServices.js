@@ -4,12 +4,17 @@ const prisma = new PrismaClient();
 const availabilityHelpers = require("./availabilityHelpers");
 const { get } = require("../routes/tableAvailabilityRoutes");
 
-exports.getAvailabilityWithOutTimeSlot = async (restaurantId, date, time, capacity) => {
+exports.getAvailabilityWithOutTimeSlot = async (restaurantId, date, capacity) => {
     try{
         const storeHourAfterException = await availabilityHelpers.getStoreHourAfterException(restaurantId, date);
         const tableAvailabilityAfterExceptionAndBooking = await availabilityHelpers.getTableAvailabilityAfterExceptionAndBooking(restaurantId, date);
-        const availableTables = availabilityHelpers.getTableAvailabilityAfterStoreHour(storeHourAfterException, tableAvailabilityAfterExceptionAndBooking);
+        const availableTables = await availabilityHelpers.getTableAvailabilityAfterStoreHour(storeHourAfterException, tableAvailabilityAfterExceptionAndBooking);
         
+        if(capacity) {
+            const filteredAvailableTables = availabilityHelpers.filterAvailability(availableTables, {"capacity": capacity});
+            return filteredAvailableTables;
+        }
+
         return availableTables;
     } catch (error) {
         console.error(error);
@@ -23,8 +28,13 @@ exports.getAvailabilityWithOutTimeSlot = async (restaurantId, date, time, capaci
 exports.getAvailability= async (restaurantId, date, time, capacity) => {
     try{
 
-        const getAvailabilityWithOutTimeSlot = await this.getAvailabilityWithOutTimeSlot(restaurantId, date, time, capacity);
+        const getAvailabilityWithOutTimeSlot = await this.getAvailabilityWithOutTimeSlot(restaurantId, date);
         const getAvailability = await availabilityHelpers.generateTimeSlotsForAvailability(restaurantId,getAvailabilityWithOutTimeSlot);
+
+        if(time || capacity) {
+            const filteredAvailableTables = availabilityHelpers.filterAvailability(getAvailability, {...(time&&{time}), ...(capacity&&{capacity})});
+            return filteredAvailableTables;
+        }
 
         return getAvailability;
 

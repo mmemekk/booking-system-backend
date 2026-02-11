@@ -28,7 +28,7 @@ exports.getAvailability = async (req, res, next) => {
 
     const formattedGetAvailability = dateTimeFormat.formatDateTimeForGetAvailabilityResponseArray(getAvailability);
 
-    return res.json({ date, formattedGetAvailability });
+    return res.json({ date, time, capacity, formattedGetAvailability });
 
   } catch (error) {
     next(error);
@@ -38,7 +38,7 @@ exports.getAvailability = async (req, res, next) => {
 exports.getAvailabilityWithOutTimeSlot = async (req, res, next) => {
   try {
     const restaurantId = parseInt(req.params.restaurantId);
-    const { date, time, capacity } = req.query;
+    const { date, capacity } = req.query;
 
     if (!restaurantId || isNaN(restaurantId)) {
       throw new AppError(400, "MISSING_ID", "Restaurant ID is required");
@@ -49,19 +49,17 @@ exports.getAvailabilityWithOutTimeSlot = async (req, res, next) => {
     }
 
     const formattedDate = dateTimeFormat.formatDateForDatabase(date);
-    const formattedTime = time ? dateTimeFormat.formatTimeForDatabase(time) : undefined;
     const formattedCapacity = capacity ? parseInt(capacity) : undefined;
 
     const getAvailabilityWithOutTimeSlot = await availabilityServices.getAvailabilityWithOutTimeSlot(
       restaurantId,
       formattedDate,
-      formattedTime,
       formattedCapacity
     );
 
     const formattedGetAvailabilityWithOutTimeSlot = dateTimeFormat.formatDateTimeForAvailabilityWithOutTimeSlotResponseArray(getAvailabilityWithOutTimeSlot);
 
-    return res.json({ date, formattedGetAvailabilityWithOutTimeSlot });
+    return res.json({ date, capacity, formattedGetAvailabilityWithOutTimeSlot });
 
   } catch (error) {
     next(error);

@@ -406,8 +406,29 @@ exports.generateTimeSlotsForAvailability = async (restaurantId, tableAvailabilit
     return result;
 } 
 
+exports.filterAvailability = (availableTables, {time,capacity}={} ) => {
+    if (!Array.isArray(availableTables)) {
+        return [];
+    }
+    let result = availableTables;
 
+    if (capacity != undefined) {
+        result = result.filter(table => table.capacity >= capacity);
+    }
+    if (time !== undefined) {
+        result = result
+            .map(table => ({
+                ...table,
+                availabilities: table.availabilities.filter(
+                    slot => slot.openTime >= time
+                )
+            }))
+            .filter(table => table.availabilities.length > 0);
+    }
 
+    return result
+
+}
 
 
 

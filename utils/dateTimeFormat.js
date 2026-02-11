@@ -182,7 +182,7 @@ exports.formatDateTimeForEffectiveTableAvailabilityResponseArray = (tables) => {
 
 exports.formatDateTimeForAvailabilityWithOutTimeSlotResponseArray = (tables) => {
   return Array.isArray(tables)
-    ? tables.map(this.formatDateTimeForTableAvailabilityWithOutTimeSlotResponse)
+    ? tables.map(this.formatDateTimeForEffectiveTableAvailabilityResponse)
     : [];
 };
 
