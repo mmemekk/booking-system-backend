@@ -6,5 +6,10 @@ should fix booking reference, thus it's easier to manage with customer
 
 time is not be used when retrieving avilability, it returns the availabilities of the whole day
 
+should return the message in API whether it's full or the store closes
+
 //in case if want to dvelop to the stage where allow one booking perday, just enter the endTime
 when create booking as 23:59
+
+//case that booking is already book, then the store later set a store exception hour, and the booking 
+is out of operation hour

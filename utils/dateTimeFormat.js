@@ -186,6 +186,24 @@ exports.formatDateTimeForAvailabilityWithOutTimeSlotResponseArray = (tables) => 
     : [];
 };
 
+exports.formatDateTimeForGetAvailabilityResponse = (table) => {
+  return {
+    ...table,
+    availabilities: table.availabilities
+      ? table.availabilities.map((slot) => ({
+          from: this.formatTimeForResponse(slot.openTime),
+          to: this.formatTimeForResponse(slot.closeTime),
+        }))
+      : undefined
+  };
+};
+
+exports.formatDateTimeForGetAvailabilityResponseArray = (tables) => {
+  return Array.isArray(tables)
+    ? tables.map(this.formatDateTimeForGetAvailabilityResponse)
+    : [];
+};
+
 exports.formatDateTimeForBookingResponse = (booking) => {
   return {
     ...booking,

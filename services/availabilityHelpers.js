@@ -110,6 +110,24 @@ const getBookingByDate = async(restaurantId, date) => {
     }
 }
 
+const getSlotDurationForRestaurant = async(restaurantId) => {
+    try {
+        const restaurant = await prisma.restaurant.findUnique({
+            where: { id: restaurantId },
+            select: { slotDuration: true }
+        });
+
+        return restaurant.slotDuration;
+
+    } catch (error) {
+        console.error(error);
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch restaurant slot duration");
+    }
+}
+
 const subtractInterval = (availabilities, exFrom, exTo) =>{
     const result = [];
 
@@ -200,6 +218,21 @@ const intersectIntervals = (availabilities, allowedIntervals) => {
   return merged;
 };
 
+const generateTimeSlot = (startTime, endTime, slotDurationMs, stepMs) => {
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+
+    const slots = [];
+
+    for (let t = start; t + slotDurationMs <= end; t += stepMs) {
+        slots.push({
+            openTime: new Date(t),
+            closeTime: new Date(t + slotDurationMs)
+        });
+    }
+
+    return slots;
+}
 
 const formatTableAvailabilityAfterExceptionResponse = (tables) => {
   return tables.map(table => {
@@ -346,6 +379,32 @@ exports.getTableAvailabilityAfterStoreHour = async (storeHourAfterException, tab
 
     return finalResult;
 }
+
+exports.generateTimeSlotsForAvailability = async (restaurantId, tableAvailabilities) => {
+    const slotDuration = await getSlotDurationForRestaurant(restaurantId);
+    const step = 15; // minutes
+
+    const slotDurationMs = slotDuration * 60 * 1000;
+    const stepMs = step * 60 * 1000;
+
+    const result = [];
+
+    for (const table of tableAvailabilities){
+        const tableSlots = [];
+
+        for (const availability of table.availabilities){
+            const slots = generateTimeSlot(availability.openTime, availability.closeTime, slotDurationMs, stepMs);
+            tableSlots.push(...slots);
+        }
+
+        result.push({
+            ...table,
+            availabilities: tableSlots,
+        });
+    }
+
+    return result;
+} 
 
 
 

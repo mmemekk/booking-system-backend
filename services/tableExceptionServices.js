@@ -34,7 +34,7 @@ exports.getTableException = async (tableId, filters) => {
     if (!tableException || tableException.length === 0) {
       throw new AppError(
         404,
-        "STORE_EXCEPTION_NOT_FOUND",
+        "TABLE_EXCEPTION_NOT_FOUND",
         "Table exceptions not found for this restaurant"
       );
     }
