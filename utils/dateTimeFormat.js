@@ -223,3 +223,12 @@ exports.formatDateTimeForBookingResponseArray = (booking) => {
   return booking.map(this.formatDateTimeForBookingResponse);
 }
 
+exports.formatDateTimeForGetAvailabilityForBookingResponse = (availabilities) => {
+  console.log("availabilities before formatting: ", availabilities);
+  return{
+    ...availabilities,
+    alternativeTimeSlots: availabilities.alternativeTimeSlots.map( (time) => 
+      this.formatTimeForResponse(time)
+    )
+  };
+};

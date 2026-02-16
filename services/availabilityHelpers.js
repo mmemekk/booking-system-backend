@@ -406,15 +406,21 @@ exports.generateTimeSlotsForAvailability = async (restaurantId, tableAvailabilit
     return result;
 } 
 
-exports.filterAvailability = (availableTables, {time,capacity}={} ) => {
+exports.filterAvailability = (availableTables, {time,capacity,capacityBuffer}={} ) => {
     if (!Array.isArray(availableTables)) {
         return [];
     }
-    let result = availableTables;
+      let result = availableTables;
 
-    if (capacity != undefined) {
-        result = result.filter(table => table.capacity >= capacity);
+      if (capacity != undefined) {
+
+        if(capacityBuffer != undefined) {
+          result = result.filter(table => table.capacity >= capacity && table.capacity <= (capacity+capacityBuffer));
+        } else {
+          result = result.filter(table => table.capacity >= capacity);
+      }
     }
+
     if (time !== undefined) {
         result = result
             .map(table => ({
@@ -429,6 +435,93 @@ exports.filterAvailability = (availableTables, {time,capacity}={} ) => {
     return result
 
 }
+
+exports.checkIfRequestedCapacityBelowMaximumCapacity = (availableTables, capacity) => {
+
+    if (!Array.isArray(availableTables)) {
+        return [];
+    }
+
+  const aggregatedCapacity = new Set();
+
+  availableTables.forEach(table =>{
+    aggregatedCapacity.add(table.capacity);
+  }
+  );
+
+  const maxCapacity = Math.max(...aggregatedCapacity);
+
+  console.log("Aggregated Capacity:", aggregatedCapacity);
+  console.log("Max Capacity:", maxCapacity);
+  
+  return capacity <= maxCapacity;
+}
+
+
+exports.getAggregatedTimeSlots = (availableTables) => {
+  const aggregatedTimeSetinMs = new Set();
+
+  availableTables.forEach(table =>{
+    table.availabilities.forEach(slot => {
+      aggregatedTimeSetinMs.add(slot.openTime.getTime());
+    });
+  }
+  );
+
+  return Array.from(aggregatedTimeSetinMs).sort((a,b) => a - b);
+
+}
+
+exports.assertIsAvailableAtRequestedTime = (aggregatedTimeinMs, requestedTime) => {
+  const requestedTimeinMs = new Date(requestedTime).getTime();
+  return aggregatedTimeinMs.includes(requestedTimeinMs);
+}
+
+exports.convertAlternativeinMsArraytoTimeArray = (alternativesInMs) => {
+  return alternativesInMs.map(timeinMs => new Date(timeinMs));
+}
+exports.getAlternativeTimeSlots = (aggregatedTimeinMs, requestedTime, maxAlternative) => {
+
+  const requestedTimeinMs = new Date(requestedTime).getTime();
+
+  const alternatives = [];
+
+  // Find insertion index (first time >= requestedTime)
+  let index = aggregatedTimeinMs.findIndex(
+    time => time >= requestedTimeinMs
+  );
+
+  if (index === -1) {
+    index = aggregatedTimeinMs.length;
+  }
+
+  let left = index - 1;
+  let right = index;
+
+  while (
+    alternatives.length < maxAlternative &&
+    (left >= 0 || right < aggregatedTimeinMs.length)
+  ) {
+
+    // Take one before
+    if (right < aggregatedTimeinMs.length && alternatives.length < maxAlternative) {
+      alternatives.push(aggregatedTimeinMs[right]);
+      right++;
+    }
+
+    // Take one after
+    if (left >= 0 && alternatives.length < maxAlternative) {
+      alternatives.push(aggregatedTimeinMs[left]);
+      left--;
+    }
+
+  }
+
+  const sortedAlternatives = alternatives.sort((a, b) => a-b);
+  return this.convertAlternativeinMsArraytoTimeArray(sortedAlternatives);
+};
+
+
 
 
 

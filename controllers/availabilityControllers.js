@@ -66,6 +66,50 @@ exports.getAvailabilityWithOutTimeSlot = async (req, res, next) => {
   }
 };
 
+exports.checkAvailabilityForBooking = async (req, res, next) => {
+  try {
+    const restaurantId = parseInt(req.params.restaurantId);
+    const { date, time, capacity, maxAlternative } = req.body;
+
+    if (!restaurantId || isNaN(restaurantId)) {
+      throw new AppError(400, "MISSING_ID", "Restaurant ID is required");
+    }
+    if (!date || !time || !capacity) {
+      throw new AppError(
+        400,
+        "MISSING_INPUT_FIELD",
+        "Missing required input fields"
+      );
+    }
+
+    let formattedMaxAlternative;
+    if (!maxAlternative || isNaN(parseInt(maxAlternative))) {
+      formattedMaxAlternative = 4; // default value for number of returned alternative time slots
+    } else{
+      formattedMaxAlternative = parseInt(maxAlternative);
+    }
+
+    const formattedDate = dateTimeFormat.formatDateForDatabase(date);
+    const formattedTime = time ? dateTimeFormat.formatTimeForDatabase(time) : undefined;
+    const formattedCapacity = capacity ? parseInt(capacity) : undefined;
+
+    const getAvailabilityForBooking = await availabilityServices.getAvailabilityForBooking(
+      restaurantId,
+      formattedDate,
+      formattedTime,
+      formattedCapacity,
+      formattedMaxAlternative
+    );
+
+    const formattedGetAvailabilityForBooking = dateTimeFormat.formatDateTimeForGetAvailabilityForBookingResponse(getAvailabilityForBooking);
+
+    return res.json(formattedGetAvailabilityForBooking );
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getEffectiveStoreHour = async (req, res, next) => {
   try {
     const restaurantId = parseInt(req.params.restaurantId);

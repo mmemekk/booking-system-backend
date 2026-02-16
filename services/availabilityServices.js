@@ -47,6 +47,39 @@ exports.getAvailability= async (restaurantId, date, time, capacity) => {
     }
 };
 
+exports.getAvailabilityForBooking= async (restaurantId, date, time, capacity, maxAlternative) => {
+    try{
+        const capacityBuffer = 4; // use to limit the maximum capacity during filtering
+        const getAvailabilityWithOutTimeSlot = await this.getAvailabilityWithOutTimeSlot(restaurantId, date);
+        const getAvailability = await availabilityHelpers.generateTimeSlotsForAvailability(restaurantId,getAvailabilityWithOutTimeSlot);
+
+        const RequestedCapacityBelowMaximumCapacity = availabilityHelpers.checkIfRequestedCapacityBelowMaximumCapacity(getAvailability, capacity);
+        if(RequestedCapacityBelowMaximumCapacity == false) {
+            return {isAvailableAtRequestedTime: false, alternativeTimeSlots: [], reason: "CAPACITY_EXCEED_MAXIMUM", note: "Contact Restaurant Directly for Arrangement"};
+        }
+
+        const filteredAvailableTablesByCapacity = availabilityHelpers.filterAvailability(getAvailability, {...(capacity&&{capacity}), ...(capacityBuffer&&{capacityBuffer})});
+
+        const aggregatedTimeinMs = availabilityHelpers.getAggregatedTimeSlots(filteredAvailableTablesByCapacity);
+        console.log("aggregatedTime:", availabilityHelpers.convertAlternativeinMsArraytoTimeArray(aggregatedTimeinMs));
+
+        const isAvailableAtRequestedTime = availabilityHelpers.assertIsAvailableAtRequestedTime(aggregatedTimeinMs, time);
+        const alternativeTimeSlots = isAvailableAtRequestedTime ? [] : availabilityHelpers.getAlternativeTimeSlots(aggregatedTimeinMs, time, maxAlternative);
+        
+        console.log("isAvailableAtRequestedTime:", isAvailableAtRequestedTime);
+        console.log("alternativeTimeSlots:", alternativeTimeSlots);
+
+        return {isAvailableAtRequestedTime, alternativeTimeSlots};
+
+    } catch (error) {
+        console.error(error);
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch availability");
+    }
+};
+
 exports.getEffectiveStoreHour = async (restaurantId, date) => {
     try{
 

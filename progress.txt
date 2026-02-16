@@ -13,3 +13,6 @@ when create booking as 23:59
 
 //case that booking is already book, then the store later set a store exception hour, and the booking 
 is out of operation hour
+
+should getAvailabilityForBooking response be return in a split format: before:[], after:[]
+if the requested capacity is higher than possible capacity, should return not applicable
