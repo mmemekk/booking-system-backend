@@ -7,6 +7,8 @@ const validateRestaurantName = (restaurantName) => {
 };
 
 const validateBookingDate = (bookingDate) => {
+    console.log(typeof(bookingDate))
+    console.log(bookingDate)
     if (bookingDate == null || typeof bookingDate !== "string" || bookingDate.trim() === "") {
         throw new AppError(400, "INVALID_BOOKING_DATE", "Booking date is required to generate booking reference");
     }

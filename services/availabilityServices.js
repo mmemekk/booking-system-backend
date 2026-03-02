@@ -47,18 +47,47 @@ exports.getAvailability= async (restaurantId, date, time, capacity) => {
     }
 };
 
-exports.getAvailabilityForBooking= async (restaurantId, date, time, capacity, maxAlternative) => {
+exports.getTableForBookingByCapacity= async (restaurantId, date, capacity) => {
     try{
         const capacityBuffer = 4; // use to limit the maximum capacity during filtering
         const getAvailabilityWithOutTimeSlot = await this.getAvailabilityWithOutTimeSlot(restaurantId, date);
         const getAvailability = await availabilityHelpers.generateTimeSlotsForAvailability(restaurantId,getAvailabilityWithOutTimeSlot);
 
-        const RequestedCapacityBelowMaximumCapacity = availabilityHelpers.checkIfRequestedCapacityBelowMaximumCapacity(getAvailability, capacity);
-        if(RequestedCapacityBelowMaximumCapacity == false) {
-            return {isAvailableAtRequestedTime: false, alternativeTimeSlots: [], reason: "CAPACITY_EXCEED_MAXIMUM", note: "Contact Restaurant Directly for Arrangement"};
+        const isBelowMaxCapacity = availabilityHelpers.checkIfRequestedCapacityBelowMaximumCapacity(getAvailability, capacity);
+
+        if(isBelowMaxCapacity == false) {
+            return {
+                success: false,
+                tables: [],
+            };
         }
 
         const filteredAvailableTablesByCapacity = availabilityHelpers.filterAvailability(getAvailability, {...(capacity&&{capacity}), ...(capacityBuffer&&{capacityBuffer})});
+
+        return {
+            success: true,
+            tables: filteredAvailableTablesByCapacity,
+        };
+
+    } catch (error) {
+        console.error(error);
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, "DATABASE_ERROR", "Failed to fetch availability");
+    }
+};
+
+exports.getAvailabilityForBooking= async (restaurantId, date, time, capacity, maxAlternative) => {
+    try{
+
+        const result = await this.getTableForBookingByCapacity(restaurantId, date, capacity);
+
+        if(!result.success) {
+            return {isAvailableAtRequestedTime: false, alternativeTimeSlots: [], reason: "CAPACITY_EXCEED_MAXIMUM", note: "Contact Restaurant Directly for Arrangement"};
+        }
+
+        const filteredAvailableTablesByCapacity = result.tables;
 
         const aggregatedTimeinMs = availabilityHelpers.getAggregatedTimeSlots(filteredAvailableTablesByCapacity);
         console.log("aggregatedTime:", availabilityHelpers.convertAlternativeinMsArraytoTimeArray(aggregatedTimeinMs));

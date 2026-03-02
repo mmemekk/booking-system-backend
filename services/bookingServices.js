@@ -47,12 +47,16 @@ exports.getBooking = async (restaurantId, filter) => {
 
 exports.createBooking = async (restaurantId, bookingData) => {
     try{
-        const restaurantName = await prisma.restaurant.findUnique({
+        const restaurant = await prisma.restaurant.findUnique({
             where: { id: restaurantId },
-            select: { name: true }
+            select: { name: true, slotDuration: true}
         });
 
-        const bookingRef = bookingReferenceUtil.generateBookingReference(restaurantName.name, bookingData.bookingDate);
+        const slotDuration = parseInt(restaurant.slotDuration);
+        const calculatedEndTime = new Date(new Date(bookingData.formattedBookingTime).getTime() + slotDuration * 60000);
+
+
+        const bookingRef = bookingReferenceUtil.generateBookingReference(restaurant.name, bookingData.bookingDate);
         const booking = await prisma.booking.create({
             data: {
                 bookingRef,
@@ -61,8 +65,8 @@ exports.createBooking = async (restaurantId, bookingData) => {
                 customerName: bookingData.customerName,
                 customerPhone: bookingData.customerPhone,
                 bookingDate: bookingData.formattedBookingDate,
-                startTime: bookingData.formattedStartTime,
-                endTime: bookingData.formattedEndTime,
+                startTime: bookingData.formattedBookingTime,
+                endTime: calculatedEndTime,
                 capacity: bookingData.capacity,
                 status: "created"
             }
@@ -129,5 +133,43 @@ exports.deleteBooking = async (bookingRef) => {
             throw error;
         }
         throw new AppError(500, "DATABASE_ERROR", "Failed to fetch table");
+    }
+};
+
+exports.getTableBasedOnBookingTime = async (table, bookingTime) => {
+    try{
+
+        if (!table || !Array.isArray(table)) {
+            throw new AppError(400, "INVALID_TABLE_DATA", "Invalid table data");
+        }
+
+        if (!bookingTime) {
+            throw new AppError(400, "MISSING_BOOKING_TIME", "Booking time is required");
+        }
+
+        const requestedTimeMs = new Date(bookingTime).getTime();
+
+        const matchedTable = table.find(table =>
+            table.availabilities?.some(slot=>
+                new Date(slot.openTime).getTime() === requestedTimeMs
+            )
+        )
+
+        if (!matchedTable) {
+            throw new AppError(
+                400,
+                "TIME_NOT_AVAILABLE",
+                "Requested time slot is not available"
+            );
+        }
+
+        return matchedTable
+
+    } catch (error) {
+        console.error(error);
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, "INTERNAL_ERROR", "Failed Internal Logic");
     }
 };

@@ -1,6 +1,8 @@
 const bookingServices = require('../services/bookingServices');
 const { AppError } = require("../middleware/errorHandler");
 const dateTimeFormat = require("../utils/dateTimeFormat");
+const availabilityServices = require("../services/availabilityServices");
+const availabilityHelpers = require("../services/availabilityHelpers");
 
 exports.getBooking = async (req, res, next) => {
   try {
@@ -35,12 +37,12 @@ exports.getBooking = async (req, res, next) => {
 exports.createBooking = async (req, res, next) => {
   try {
     const restaurantId = parseInt(req.params.restaurantId);
-    const { tableId, customerName, customerPhone, bookingDate, startTime, endTime, capacity } = req.body;
+    const { customerName, customerPhone, bookingDate, bookingTime, capacity } = req.body;
 
     if (!restaurantId || isNaN(restaurantId)) {
       throw new AppError(400, "MISSING_ID", "Restaurant ID is required");
     }
-    if (!tableId || !customerName || !customerPhone || !bookingDate || !startTime || !endTime || !capacity) {
+    if (!customerName || !customerPhone || !bookingDate || !bookingTime || !capacity) {
       throw new AppError(
         400,
         "MISSING_INPUT_FIELD",
@@ -49,8 +51,24 @@ exports.createBooking = async (req, res, next) => {
     }
 
     const formattedBookingDate = dateTimeFormat.formatDateForDatabase(bookingDate);
-    const formattedStartTime = dateTimeFormat.formatTimeForDatabase(startTime);
-    const formattedEndTime = dateTimeFormat.formatTimeForDatabase(endTime);
+    const formattedBookingTime = dateTimeFormat.formatTimeForDatabase(bookingTime);
+    const formattedCapacity = parseInt(capacity);
+
+    const getTableForBookingByCapacity = await availabilityServices.getTableForBookingByCapacity(restaurantId, formattedBookingDate, formattedCapacity);
+    if(!getTableForBookingByCapacity.success) {
+      throw new AppError(
+        400,
+        "CAPACITY_EXCEED_MAXIMUM",
+        "Requested capacity exceeds maximum capacity. Contact restaurant directly for arrangement"
+      )
+    }
+
+    const tableByCapacity = getTableForBookingByCapacity.tables;
+    const SortedTableByCapacity = tableByCapacity.sort((a,b) => (a.capacity-b.capacity) || (a.id-b.id));
+    const tableBasedOnBookingTime =  await bookingServices.getTableBasedOnBookingTime(SortedTableByCapacity,formattedBookingTime);
+    const tableId = parseInt(tableBasedOnBookingTime.id)
+
+    console.log("tableId", tableId)
 
     const createdBooking = await bookingServices.createBooking(restaurantId,{
       tableId,
@@ -58,8 +76,7 @@ exports.createBooking = async (req, res, next) => {
       customerPhone,
       bookingDate,
       formattedBookingDate,
-      formattedStartTime,
-      formattedEndTime,
+      formattedBookingTime,
       capacity
     });
 

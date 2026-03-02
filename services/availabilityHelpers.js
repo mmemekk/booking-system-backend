@@ -480,6 +480,7 @@ exports.assertIsAvailableAtRequestedTime = (aggregatedTimeinMs, requestedTime) =
 exports.convertAlternativeinMsArraytoTimeArray = (alternativesInMs) => {
   return alternativesInMs.map(timeinMs => new Date(timeinMs));
 }
+
 exports.getAlternativeTimeSlots = (aggregatedTimeinMs, requestedTime, maxAlternative) => {
 
   const requestedTimeinMs = new Date(requestedTime).getTime();
