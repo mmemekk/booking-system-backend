@@ -53,13 +53,29 @@ exports.createBooking = async (restaurantId, bookingData) => {
         });
 
         console.log("FormattedBookingTime", bookingData.formattedBookingTime)
-        console.log(typeof(bookingData.formattedBookingTime))
+        console.log("Type formatted booking time", typeof(bookingData.formattedBookingTime))
         const slotDuration = parseInt(restaurant.slotDuration);
-        const calculatedEndTime = new Date(new Date(bookingData.formattedBookingTime).getTime() + slotDuration * 60000);
+        // const calculatedEndTime = new Date(new Date(bookingData.formattedBookingTime).getTime() + slotDuration * 60000);
+
+
+        const bookingDate = new Date(bookingData.formattedBookingDate);
+        const startTimeRaw = new Date(bookingData.formattedBookingTime);
+
+        // Extract time from startTimeRaw
+        const hours = startTimeRaw.getUTCHours();
+        const minutes = startTimeRaw.getUTCMinutes();
+
+        bookingDate.setUTCHours(hours);
+        bookingDate.setUTCMinutes(minutes);
+        bookingDate.setUTCSeconds(0);
+        bookingDate.setUTCMilliseconds(0);
+
+        const calculatedEndTime = new Date(
+        bookingDate.getTime() + slotDuration * 60000
+        );
 
         console.log("calculatedEndTime", calculatedEndTime)
         console.log(typeof(calculatedEndTime))
-        console.log("formattedBookingTime", bookingData.formattedBookingTime)
 
         const bookingRef = bookingReferenceUtil.generateBookingReference(restaurant.name, bookingData.bookingDate);
         const booking = await prisma.booking.create({
