@@ -52,9 +52,14 @@ exports.createBooking = async (restaurantId, bookingData) => {
             select: { name: true, slotDuration: true}
         });
 
+        console.log("FormattedBookingTime", bookingData.formattedBookingTime)
+        console.log(typeof(bookingData.formattedBookingTime))
         const slotDuration = parseInt(restaurant.slotDuration);
         const calculatedEndTime = new Date(new Date(bookingData.formattedBookingTime).getTime() + slotDuration * 60000);
 
+        console.log("calculatedEndTime", calculatedEndTime)
+        console.log(typeof(calculatedEndTime))
+        console.log("formattedBookingTime", bookingData.formattedBookingTime)
 
         const bookingRef = bookingReferenceUtil.generateBookingReference(restaurant.name, bookingData.bookingDate);
         const booking = await prisma.booking.create({

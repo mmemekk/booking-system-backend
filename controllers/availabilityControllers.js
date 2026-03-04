@@ -68,9 +68,9 @@ exports.getAvailabilityWithOutTimeSlot = async (req, res, next) => {
 
 exports.checkAvailabilityForBooking = async (req, res, next) => {
   try {
-    console.log(req.body);
     const restaurantId = parseInt(req.params.restaurantId);
     const { date, time, capacity, maxAlternative } = req.body;
+    console.log("CheckAvailabilityForBooking Request Body", req.body)
 
     if (!restaurantId || isNaN(restaurantId)) {
       throw new AppError(400, "MISSING_ID", "Restaurant ID is required");

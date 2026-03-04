@@ -38,6 +38,7 @@ exports.createBooking = async (req, res, next) => {
   try {
     const restaurantId = parseInt(req.params.restaurantId);
     const { customerName, customerPhone, bookingDate, bookingTime, capacity } = req.body;
+    console.log("Create Booking Request Body", req.body)
 
     if (!restaurantId || isNaN(restaurantId)) {
       throw new AppError(400, "MISSING_ID", "Restaurant ID is required");
@@ -53,7 +54,7 @@ exports.createBooking = async (req, res, next) => {
     const formattedBookingDate = dateTimeFormat.formatDateForDatabase(bookingDate);
     const formattedBookingTime = dateTimeFormat.formatTimeForDatabase(bookingTime);
     const formattedCapacity = parseInt(capacity);
-
+    console.log("Formatted Booking Time at Controller", formattedBookingTime)
     const getTableForBookingByCapacity = await availabilityServices.getTableForBookingByCapacity(restaurantId, formattedBookingDate, formattedCapacity);
     if(!getTableForBookingByCapacity.success) {
       throw new AppError(
