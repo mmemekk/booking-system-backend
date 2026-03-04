@@ -384,6 +384,10 @@ exports.generateTimeSlotsForAvailability = async (restaurantId, tableAvailabilit
     const slotDuration = await getSlotDurationForRestaurant(restaurantId);
     const step = 15; // minutes
 
+    if (!slotDuration || isNaN(slotDuration) || slotDuration <= 0) {
+        throw new AppError(500, "INVALID_SLOT_DURATION", "Invalid slot duration for restaurant");
+    }
+
     const slotDurationMs = slotDuration * 60 * 1000;
     const stepMs = step * 60 * 1000;
 

@@ -54,7 +54,6 @@ exports.createBooking = async (req, res, next) => {
     const formattedBookingDate = dateTimeFormat.formatDateForDatabase(bookingDate);
     const formattedBookingTime = dateTimeFormat.formatTimeForDatabase(bookingTime);
     const formattedCapacity = parseInt(capacity);
-    console.log("Formatted Booking Time at Controller", formattedBookingTime)
     const getTableForBookingByCapacity = await availabilityServices.getTableForBookingByCapacity(restaurantId, formattedBookingDate, formattedCapacity);
     if(!getTableForBookingByCapacity.success) {
       throw new AppError(

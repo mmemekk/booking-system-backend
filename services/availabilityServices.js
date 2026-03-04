@@ -84,10 +84,12 @@ exports.getAvailabilityForBooking= async (restaurantId, date, time, capacity, ma
         const result = await this.getTableForBookingByCapacity(restaurantId, date, capacity);
 
         if(!result.success) {
-            return {isAvailableAtRequestedTime: false, alternativeTimeSlots: [], reason: "CAPACITY_EXCEED_MAXIMUM", note: "Contact Restaurant Directly for Arrangement"};
+            return {isAvailableAtRequestedTime: false, alternativeTimeSlots: [], reason: "CAPACITY_EXCEED_MAXIMUM OR NOT AVAILABLE", note: "Contact Restaurant Directly for Arrangement"};
         }
 
         const filteredAvailableTablesByCapacity = result.tables;
+        console.log("filteredAvailableTablesByCapacity:");
+        console.dir(filteredAvailableTablesByCapacity, {depth:null});
 
         const aggregatedTimeinMs = availabilityHelpers.getAggregatedTimeSlots(filteredAvailableTablesByCapacity);
         console.log("aggregatedTime:", availabilityHelpers.convertAlternativeinMsArraytoTimeArray(aggregatedTimeinMs));
