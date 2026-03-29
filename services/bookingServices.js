@@ -67,6 +67,7 @@ exports.createBooking = async (restaurantId, bookingData) => {
                 startTime: bookingData.formattedBookingTime,
                 endTime: calculatedEndTime,
                 capacity: bookingData.capacity,
+                specialRequest: bookingData.specialRequest,
                 status: "created"
             }
         });
@@ -96,6 +97,7 @@ exports.updateBooking = async (bookingRef, bookingData) => {
                 startTime: bookingData.formattedStartTime,
                 endTime: bookingData.formattedEndTime,
                 capacity: bookingData.capacity,
+                specialRequest: bookingData.specialRequest
             }
         });
 

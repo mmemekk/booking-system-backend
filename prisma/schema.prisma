@@ -110,6 +110,7 @@ model Booking {
   startTime     DateTime  @db.Time
   endTime       DateTime  @db.Time
   capacity      Int
+  specialRequest String?
   status        String    // e.g. "confirmed", "cancelled"
   createdAt     DateTime  @default(now())
 

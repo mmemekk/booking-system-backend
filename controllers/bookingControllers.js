@@ -37,7 +37,7 @@ exports.getBooking = async (req, res, next) => {
 exports.createBooking = async (req, res, next) => {
   try {
     const restaurantId = parseInt(req.params.restaurantId);
-    const { customerName, customerPhone, bookingDate, bookingTime, capacity } = req.body;
+    const { customerName, customerPhone, bookingDate, bookingTime, capacity, specialRequest } = req.body;
     console.log("Create Booking Request Body", req.body)
 
     if (!restaurantId || isNaN(restaurantId)) {
@@ -77,7 +77,8 @@ exports.createBooking = async (req, res, next) => {
       bookingDate,
       formattedBookingDate,
       formattedBookingTime,
-      capacity
+      capacity,
+      specialRequest
     });
 
     const formattedCreateBooking =  dateTimeFormat.formatDateTimeForBookingResponse(
@@ -98,7 +99,7 @@ exports.updateBooking = async (req, res, next) => {
       throw new AppError(400, "MISSING_ID", "Booking Ref is required");
     }
 
-    const { tableId, customerName, customerPhone, bookingDate, startTime, endTime, capacity } = req.body;
+    const { tableId, customerName, customerPhone, bookingDate, startTime, endTime, capacity, specialRequest } = req.body;
     const formattedBookingDate = bookingDate
       ? dateTimeFormat.formatDateForDatabase(bookingDate)
       : undefined;
@@ -116,7 +117,8 @@ exports.updateBooking = async (req, res, next) => {
       formattedBookingDate,
       formattedStartTime,
       formattedEndTime,
-      capacity
+      capacity,
+      specialRequest
     });
     const formattedUpdateBooking =  dateTimeFormat.formatDateTimeForBookingResponse( updatedBooking );
     
