@@ -71,7 +71,7 @@ async function sendBookingConfirmationSms({
     `Date: ${dateStr}`,
     `Time: ${startStr}`,
     `Guests: ${capacity} people`,
-    `To modify your booking, tap here: https://bookingagent/${restaurantName}`,
+    `To modify your booking, tap here: https://bookingagent/edit`,
     "See you soon!😃",
   ].join("\n");
 
