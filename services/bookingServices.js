@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const { AppError } = require("../middleware/errorHandler");
 const prisma = new PrismaClient();
 const bookingReferenceUtil = require("../utils/bookingReference");
+const smsServices = require("./smsServices");
 
 
 exports.getBooking = async (restaurantId, filter) => {
@@ -71,6 +72,18 @@ exports.createBooking = async (restaurantId, bookingData) => {
                 status: "created"
             }
         });
+
+        smsServices
+            .sendBookingConfirmationSms({
+                customerPhone: booking.customerPhone,
+                bookingRef: booking.bookingRef,
+                customerName: booking.customerName,
+                restaurantName: restaurant.name,
+                bookingDate: booking.bookingDate,
+                startTime: booking.startTime,
+                capacity: booking.capacity,
+            })
+            .catch((err) => console.error("Booking confirmation SMS failed:", err.message));
 
         return booking;
 
