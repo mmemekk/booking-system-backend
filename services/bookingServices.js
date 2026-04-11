@@ -110,7 +110,8 @@ exports.updateBooking = async (bookingRef, bookingData) => {
                 startTime: bookingData.formattedStartTime,
                 endTime: bookingData.formattedEndTime,
                 capacity: bookingData.capacity,
-                specialRequest: bookingData.specialRequest
+                specialRequest: bookingData.specialRequest,
+                status: bookingData.status
             }
         });
 

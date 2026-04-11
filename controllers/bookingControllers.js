@@ -99,7 +99,7 @@ exports.updateBooking = async (req, res, next) => {
       throw new AppError(400, "MISSING_ID", "Booking Ref is required");
     }
 
-    const { tableId, customerName, customerPhone, bookingDate, startTime, endTime, capacity, specialRequest } = req.body;
+    const { tableId, customerName, customerPhone, bookingDate, startTime, endTime, capacity, specialRequest, status} = req.body;
     const formattedBookingDate = bookingDate
       ? dateTimeFormat.formatDateForDatabase(bookingDate)
       : undefined;
@@ -109,6 +109,10 @@ exports.updateBooking = async (req, res, next) => {
     const formattedEndTime = endTime
       ? dateTimeFormat.formatTimeForDatabase(endTime)
       : undefined;
+    
+    if (status && !["created", "confirmed", "canceled","noshow", "success"].includes(status)) {
+      throw new AppError(400, "INVALID_STATUS", "Status must be one of: created, success, canceled, noshow");
+    }
 
     const updatedBooking = await bookingServices.updateBooking(bookingRef,{
       tableId,
@@ -118,7 +122,8 @@ exports.updateBooking = async (req, res, next) => {
       formattedStartTime,
       formattedEndTime,
       capacity,
-      specialRequest
+      specialRequest,
+      status
     });
     const formattedUpdateBooking =  dateTimeFormat.formatDateTimeForBookingResponse( updatedBooking );
     
