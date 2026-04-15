@@ -92,6 +92,49 @@ exports.createBooking = async (req, res, next) => {
   }
 };
 
+exports.createBookingManual = async (req, res, next) => {
+  try {
+    const restaurantId = parseInt(req.params.restaurantId);
+    const { customerName, customerPhone, bookingDate, bookingTime, capacity, specialRequest,tableId } = req.body;
+    console.log("Create Booking Request Body", req.body)
+
+    if (!restaurantId || isNaN(restaurantId)) {
+      throw new AppError(400, "MISSING_ID", "Restaurant ID is required");
+    }
+
+    if (!customerName || !customerPhone || !bookingDate || !bookingTime || !capacity || !tableId) {
+      throw new AppError(
+        400,
+        "MISSING_INPUT_FIELD",
+        "Missing required input fields"
+      );
+    }
+
+    const formattedBookingDate = dateTimeFormat.formatDateForDatabase(bookingDate);
+    const formattedBookingTime = dateTimeFormat.formatTimeForDatabase(bookingTime);
+
+    const createdBooking = await bookingServices.createBooking(restaurantId,{
+      tableId,
+      customerName,
+      customerPhone,
+      bookingDate,
+      formattedBookingDate,
+      formattedBookingTime,
+      capacity,
+      specialRequest
+    });
+
+    const formattedCreateBooking =  dateTimeFormat.formatDateTimeForBookingResponse(
+      createdBooking
+    );
+
+    return res.status(201).json({ formattedCreateBooking });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.updateBooking = async (req, res, next) => {
   try {
     const bookingRef = req.params.bookingRef;
