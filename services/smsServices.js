@@ -9,8 +9,18 @@ function formatDateForSms(date) {
   const d = date instanceof Date ? date : new Date(date);
   const day = String(d.getUTCDate()).padStart(2, "0");
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
   const month = months[d.getUTCMonth()];
   const year = d.getUTCFullYear();
@@ -27,7 +37,7 @@ function getTwilioClient() {
 }
 
 async function sendSMS(to, messageBody) {
-  try{
+  try {
     const client = getTwilioClient();
     if (!client) {
       console.warn("SMS skipped: Twilio credentials not configured");
@@ -75,8 +85,49 @@ async function sendBookingConfirmationSms({
     "See you soon!😃",
   ].join("\n");
 
+  return sendSMS(to, body);
+}
+
+async function sendBookingUpdateSms({
+  customerPhone,
+  bookingRef,
+  customerName,
+  restaurantName,
+  bookingDate,
+  startTime,
+  capacity,
+  isUpdated = false,
+  isCanceled = false,
+}) {
+  const dateStr = formatDateForSms(bookingDate);
+  const startStr = dateTimeFormat.formatTimeForResponse(startTime);
+  const to = normalizeThaiPhoneToE164(customerPhone);
+
+  let title;
+  let end;
+  if (isCanceled) {
+    title = `❌ Your booking with ${restaurantName} is Canceled!`;
+    end = "Hope to see you another time!😔";
+  } else if (isUpdated) {
+    title = `🔄 Your booking with ${restaurantName} is Updated!`;
+    end = "See you soon!😃";
+  } else {
+    title = `✅ Your booking with ${restaurantName} is Confirmed!`;
+    end = "See you soon!😃";
+  }
+
+  const body = [
+    title,
+    `Booking Ref: ${bookingRef}`,
+    `Name: ${customerName}`,
+    `Date: ${dateStr}`,
+    `Time: ${startStr}`,
+    `Guests: ${capacity} people`,
+    `To modify your booking, tap here: https://genie.up.railway.app/manage/${bookingRef}`,
+    end,
+  ].join("\n");
 
   return sendSMS(to, body);
 }
 
-module.exports = { sendSMS, sendBookingConfirmationSms };
+module.exports = { sendSMS, sendBookingConfirmationSms, sendBookingUpdateSms };
