@@ -71,7 +71,7 @@ async function sendBookingConfirmationSms({
     `Date: ${dateStr}`,
     `Time: ${startStr}`,
     `Guests: ${capacity} people`,
-    `To modify your booking, tap here: https://bookingagent/edit`,
+    `To modify your booking, tap here: https://genie.up.railway.app/manage/${bookingRef}`,
     "See you soon!😃",
   ].join("\n");
 
