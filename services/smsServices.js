@@ -33,7 +33,8 @@ function getTwilioClient() {
   if (!sid || !token) {
     return null;
   }
-  return twilio(sid, token);
+  // return twilio(sid, token);
+  return null;
 }
 
 async function sendSMS(to, messageBody) {
