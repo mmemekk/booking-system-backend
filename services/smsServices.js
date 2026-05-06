@@ -33,7 +33,7 @@ function getTwilioClient() {
   if (!sid || !token) {
     return null;
   }
-  // return twilio(sid, token);
+  return twilio(sid, token);
   return null;
 }
 
@@ -128,7 +128,8 @@ async function sendBookingUpdateSms({
     end,
   ].join("\n");
 
-  return sendSMS(to, body);
+  // return sendSMS(to, body);
+  return null;
 }
 
 module.exports = { sendSMS, sendBookingConfirmationSms, sendBookingUpdateSms };
